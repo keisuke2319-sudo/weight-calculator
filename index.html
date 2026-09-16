@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f4f6f8">
+<title>Weight Calculator</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="WeightCalc">
+<style>
+    .character-header {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.character-header img {
+    display: block;
+    width: 100%;
+    max-height: 105px;
+    object-fit: contain;
+    margin: 0 auto;
+}
+:root{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#18202a;background:#f4f6f8}
+*{box-sizing:border-box} body{margin:0} .app{max-width:430px;margin:auto;padding:16px}
+h1{font-size:20px;margin:2px 0 14px}.card{background:#fff;border:1px solid #dce2e8;border-radius:16px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:13px;font-weight:700;margin:0 0 5px;color:#4b5563}
+.total{display:flex;align-items:center;gap:8px}.total input{font-size:26px;font-weight:700}
+input,select,button{font:inherit} input,select{width:100%;min-width:0;border:1px solid #cfd6dd;border-radius:11px;background:#fff;padding:11px 10px;font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.counter{display:grid;grid-template-columns:44px 1fr 44px;gap:5px}
+.counter button{height:45px;border:1px solid #cfd6dd;background:#fff;border-radius:11px;font-size:22px}.counter input{text-align:center;padding:8px}
+.result{text-align:center}.result small{color:#667085}.value{font-size:38px;font-weight:800;margin:3px 0}.detail{font-size:12px;color:#667085;min-height:17px}
+.warning{margin-top:8px;padding:8px;border:1px solid #d0d5dd;border-radius:9px;font-size:13px;display:none}
+.reset{width:100%;min-height:48px;border:1px solid #cfd6dd;border-radius:12px;background:#fff;font-weight:700}
+.settings-btn{width:100%;margin-top:10px;min-height:42px;border:0;background:transparent;color:#667085;font-weight:700}.settings{display:none;margin-top:12px}.settings.open{display:block}.settings h2{font-size:18px;margin:0 0 12px}.settings-row{margin-bottom:11px}.settings-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.save-master,.close-settings,.restore-master{min-height:44px;border:1px solid #cfd6dd;border-radius:11px;background:#fff;font-weight:700}.restore-master{width:100%;margin-top:9px;color:#8a2d2d}.master-note{font-size:12px;color:#667085;margin-top:8px;min-height:18px}
+@media(max-width:350px){.app{padding:10px}.grid{gap:8px}input,select{padding:10px 7px}.counter{grid-template-columns:40px 1fr 40px}}
+</style>
+</head>
+<body>
+<main class="app">
+<div class="character-header">
+    <img src="characters.png" alt="Weight Calculator">
+</div>
+<section class="card">
+<label for="total">総重量</label>
+<div class="total"><input id="total" type="number" inputmode="decimal" step="0.001" min="0" placeholder="0.000"><b>kg</b></div>
+</section>
+<section class="card grid">
+<div><label>箱</label><select id="box"></select></div>
+<div><label>フィルム種類</label><select id="film"></select></div>
+<div><label>側板</label><select id="side"></select></div>
+<div><label>側板個数</label><div class="counter"><button data-id="sideCount" data-d="-1">−</button><input id="sideCount" type="number" inputmode="numeric" min="0" value="0"><button data-id="sideCount" data-d="1">＋</button></div></div>
+<div><label>キャップ</label><select id="cap"></select></div>
+<div><label>キャップ個数</label><div class="counter"><button data-id="capCount" data-d="-1">−</button><input id="capCount" type="number" inputmode="numeric" min="0" value="0"><button data-id="capCount" data-d="1">＋</button></div></div>
+<div><label>紙管</label><select id="tube"></select></div>
+<div><label for="adjust">微調整</label><div class="total"><input id="adjust" type="number" inputmode="decimal" step="0.001" value="0"><b>kg</b></div></div>
+</section>
+<section class="card result" aria-live="polite">
+<small>実測値</small><div><span id="result" class="value">---</span> <b>m</b></div>
+<div id="detail" class="detail"></div><div id="warning" class="warning"></div>
+</section>
+<button id="reset" class="reset">初期値に戻す</button>
+<button id="openSettings" class="settings-btn" type="button">⚙️ マスタ編集</button>
+<section id="settings" class="card settings"><h2>マスタ編集</h2>
+<div class="settings-row"><label>分類</label><select id="masterCategory"><option value="box">箱</option><option value="film">フィルム</option><option value="side">側板</option><option value="cap">キャップ</option><option value="tube">紙管</option></select></div>
+<div class="settings-row"><label>項目</label><select id="masterItem"></select></div>
+<div class="settings-row"><label id="masterValueLabel">重量</label><div class="total"><input id="masterValue" type="number" inputmode="decimal" step="0.00001" placeholder="未登録"><b id="masterUnit">kg</b></div></div>
+<div class="settings-actions"><button id="saveMaster" class="save-master">保存</button><button id="closeSettings" class="close-settings">閉じる</button></div>
+<div class="settings-actions" style="margin-top:9px">
+<button id="exportMaster" class="save-master" type="button">📤 マスタ書き出し</button>
+<button id="importMaster" class="close-settings" type="button">📥 マスタ読み込み</button>
+</div>
+<input id="importFile" type="file" accept=".json,application/json" hidden>
+<button id="restoreMaster" class="restore-master">初期マスタに戻す</button><div id="masterNote" class="master-note"></div></section>
+</main>
+<script>
+const D={
+box:[],
+side:[],
+cap:[],
+tube:[],
+film:[]
+};
+const INITIAL_MASTER = JSON.parse(JSON.stringify(D));
+const STORAGE_KEY = "weightCalculatorMasterData";
+
+const savedMaster = localStorage.getItem(STORAGE_KEY);
+
+if (savedMaster) {
+    try {
+        const loadedData = JSON.parse(savedMaster);
+
+        D.box = loadedData.box ?? D.box;
+        D.side = loadedData.side ?? D.side;
+        D.cap = loadedData.cap ?? D.cap;
+        D.tube = loadedData.tube ?? D.tube;
+        D.film = loadedData.film ?? D.film;
+
+        console.log("保存済みマスタを読み込みました");
+    } catch (error) {
+        console.error("マスタデータの読み込みに失敗しました", error);
+    }
+} else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(D));
+    console.log("初期マスタを端末に保存しました");
+}
+const $=id=>document.getElementById(id);
+function fill(id,a,allowNone){const s=$(id);const first=document.createElement("option");first.value="";first.dataset.ok=allowNone?"1":"0";first.dataset.v=allowNone?"0":"";first.textContent=allowNone?"なし":"選択してください";s.appendChild(first);a.forEach(([name,v])=>{const o=document.createElement("option");o.value=name;o.dataset.ok=v===null?"0":"1";o.dataset.v=v===null?"":String(v);o.textContent=name+(v===null?" ※未登録":"");s.appendChild(o)})}
+fill("box",D.box,true);fill("film",D.film,false);fill("side",D.side,true);fill("cap",D.cap,true);fill("tube",D.tube,true);
+const sv=id=>{const o=$(id).selectedOptions[0];return Number(o?.dataset.v)||0}, ok=id=>$(id).selectedOptions[0]?.dataset.ok==="1";
+function rebuildMainSelects(){const c={box:$("box").value,film:$("film").value,side:$("side").value,cap:$("cap").value,tube:$("tube").value};[["box",D.box,true],["film",D.film,false],["side",D.side,true],["cap",D.cap,true],["tube",D.tube,true]].forEach(([id,a,allow])=>{$(id).innerHTML="";fill(id,a,allow);if([...$(id).options].some(o=>o.value===c[id]))$(id).value=c[id]})}
+function loadMasterValue(){const cat=$("masterCategory").value,i=Number($("masterItem").value),v=D[cat]?.[i]?.[1];$("masterValue").value=v==null?"":v;$("masterNote").textContent=D[cat]?.length?"":"マスタデータがありません。📥 マスタ読み込みからJSONを読み込んでください。"}
+function loadMasterItems(){const cat=$("masterCategory").value,s=$("masterItem");s.innerHTML="";D[cat].forEach(([name,v],i)=>{const o=document.createElement("option");o.value=i;o.textContent=name+(v==null?" ※未登録":"");s.appendChild(o)});$("masterValueLabel").textContent=cat==="film"?"係数（1kg=）":"重量";$("masterUnit").textContent=cat==="film"?"m":"kg";loadMasterValue()}
+$("openSettings").addEventListener("click",()=>{$("settings").classList.add("open");loadMasterItems();$("settings").scrollIntoView({behavior:"smooth",block:"start"})});
+$("closeSettings").addEventListener("click",()=>$("settings").classList.remove("open"));
+$("masterCategory").addEventListener("change",loadMasterItems);$("masterItem").addEventListener("change",loadMasterValue);
+$("saveMaster").addEventListener("click",()=>{const cat=$("masterCategory").value,i=Number($("masterItem").value),raw=$("masterValue").value.trim(),v=Number(raw);if(raw===""||!Number.isFinite(v)||v<0){$("masterNote").textContent="0以上の数値を入力してください";return}D[cat][i][1]=v;localStorage.setItem(STORAGE_KEY,JSON.stringify(D));rebuildMainSelects();loadMasterItems();calc();$("masterNote").textContent="保存しました"});
+
+$("exportMaster").addEventListener("click",()=>{
+  const payload={format:"WeightCalculatorMaster",version:1,exportedAt:new Date().toISOString(),data:D};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+  const url=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=url;a.download="weight-calculator-master.json";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+  $("masterNote").textContent="マスタを書き出しました";
+});
+$("importMaster").addEventListener("click",()=>{$("importFile").value="";$("importFile").click()});
+$("importFile").addEventListener("change",async e=>{
+  const file=e.target.files?.[0];if(!file)return;
+  try{
+    const parsed=JSON.parse(await file.text());
+    const incoming=parsed?.format==="WeightCalculatorMaster"?parsed.data:parsed;
+    const keys=["box","side","cap","tube","film"];
+    if(!incoming||!keys.every(k=>Array.isArray(incoming[k])))throw new Error("形式が違います");
+    for(const k of keys){
+      if(!incoming[k].every(x=>Array.isArray(x)&&x.length>=2&&typeof x[0]==="string"&&(x[1]===null||typeof x[1]==="number")))throw new Error("データ形式が違います");
+    }
+    if(!confirm("現在のマスタを読み込んだファイルで置き換えますか？"))return;
+    keys.forEach(k=>D[k]=JSON.parse(JSON.stringify(incoming[k])));
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(D));
+    rebuildMainSelects();loadMasterItems();calc();
+    $("masterNote").textContent="マスタを読み込みました";
+  }catch(err){$("masterNote").textContent="読み込み失敗：正しいマスタファイルか確認してください"}
+});
+
+$("restoreMaster").addEventListener("click",()=>{if(!confirm("マスタを最初の状態に戻しますか？"))return;["box","side","cap","tube","film"].forEach(k=>D[k]=JSON.parse(JSON.stringify(INITIAL_MASTER[k])));localStorage.setItem(STORAGE_KEY,JSON.stringify(D));rebuildMainSelects();loadMasterItems();calc();$("masterNote").textContent="初期マスタに戻しました"});
+
+function calc(){const missing=[];[["box","箱"],["film","フィルム"],["side","側板"],["cap","キャップ"],["tube","紙管"]].forEach(([id,n])=>{if(!ok(id))missing.push(n)});const w=$("warning");if(missing.length){$("result").textContent="---";$("detail").textContent="";w.textContent="未選択または数値未登録："+missing.join(" / ");w.style.display="block";return}const total=Math.max(0,Number($("total").value)||0),sc=Math.max(0,Math.round(Number($("sideCount").value)||0)),cc=Math.max(0,Math.round(Number($("capCount").value)||0)),adj=Number($("adjust").value)||0;$("sideCount").value=sc;$("capCount").value=cc;const net=total-sv("box")-sv("side")*sc-sv("cap")*cc-sv("tube")-adj;if(net<0){$("result").textContent="0.00";$("detail").textContent="";w.textContent="部材重量が総重量を超えています";w.style.display="block";return}$("result").textContent=(net*sv("film")).toFixed(2);$("detail").textContent=`正味重量 ${net.toFixed(4)} kg × ${sv("film")}`;w.style.display="none"}
+["total","box","film","side","sideCount","cap","capCount","tube","adjust"].forEach(id=>{$(id).addEventListener("input",calc);$(id).addEventListener("change",calc)});
+document.querySelectorAll("[data-id]").forEach(b=>b.addEventListener("click",()=>{const e=$(b.dataset.id);e.value=Math.max(0,(Number(e.value)||0)+Number(b.dataset.d));calc()}));
+$("reset").addEventListener("click",()=>{$("total").value="";["box","film","side","cap","tube"].forEach(id=>$(id).selectedIndex=0);$("sideCount").value=0;$("capCount").value=0;$("adjust").value=0;calc();$("total").focus()});
+calc();
+</script>
+<script>
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./service-worker.js")
+            .then(() => {
+                console.log("Service Worker 登録成功");
+            })
+            .catch(error => {
+                console.error("Service Worker 登録失敗:", error);
+            });
+    });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "Weight Calculator",
+  "short_name": "WeightCalc",
+  "description": "重量から実測値を計算するツール",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#f4f6f8",
+  "lang": "ja"
+}
